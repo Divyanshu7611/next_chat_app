@@ -9,3 +9,53 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model User {
+  id        String      @id @default(cuid())
+  name      String?
+  email     String      @unique
+  image     String?
+  messages  Message[]
+  roomUsers RoomUser[]
+  createdAt DateTime    @default(now())
+}
+
+model Room {
+  id        String      @id @default(cuid())
+  name      String
+  roomCode  String      @unique
+  isGroup   Boolean     @default(true)
+  messages  Message[]
+  roomUsers RoomUser[]
+  createdAt DateTime    @default(now())
+}
+
+model RoomUser {
+  id        String   @id @default(cuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  room      Room     @relation(fields: [roomId], references: [id])
+  roomId    String
+  joinedAt  DateTime @default(now())
+
+  @@unique([userId, roomId]) // Prevent duplicate entry
+}
+
+model Message {
+  id        String      @id @default(cuid())
+  content   String
+  type      MessageType @default(TEXT)
+  sender    User        @relation(fields: [senderId], references: [id])
+  senderId  String
+  room      Room        @relation(fields: [roomId], references: [id])
+  roomId    String
+  createdAt DateTime    @default(now())
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  FILE
+}
